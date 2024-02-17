@@ -21,7 +21,12 @@ class Game21 : Game
 
     public void AddPlayer()
     {
-
+        Console.WriteLine("enter name:");
+        string name=Console.ReadLine();
+        Console.WriteLine("deposit:");
+        int deposit=Convert.ToInt32(Console.ReadLine());
+        Console.WriteLine();
+        Console.WriteLine("");
     }
 
     public void GameOn()
