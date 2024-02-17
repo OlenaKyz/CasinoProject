@@ -8,15 +8,15 @@ Random rand= new Random();
 abstract class Game
 {
 
-    public void AddPlayer() { }
-    public void GameOn() { }
+    public virtual void AddPlayer() { }
+    public virtual void GameOn() { }
 }
 
 class Game21 : Game
 {
     List<ArrayList> players = new List<ArrayList>();
 
-    public void AddPlayer()
+    public override void AddPlayer()
     {
         Console.WriteLine("enter name:");
         string name=Console.ReadLine();
@@ -35,7 +35,7 @@ class Game21 : Game
         return val;
     }
 
-    public void GameOn()
+    public override void GameOn()
     {
         int vin = 0;
         while(vin!=1)
