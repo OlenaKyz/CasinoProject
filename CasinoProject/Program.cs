@@ -17,7 +17,7 @@ int ch;
 Casino casino = new Casino();
 while(true)
 {
-    Console.WriteLine("Сделайте выбор:");
+    Console.WriteLine("Сделайте выбор в меню:");
     ch =Convert.ToInt32(Console.ReadLine());
     if (ch == 6)
         break;
@@ -255,6 +255,9 @@ class Game21 : Game
                 }
                 Console.WriteLine("закончить игру - 0, продолжить любую кнопку.");
                 chExc = Convert.ToInt32(Console.ReadLine());
+                if (chExc != 0)
+                    continue;
+                break;
             }
         }
     }
@@ -322,7 +325,7 @@ public class Casino
     public void PlayerRating() 
     {
         var sortedPeople1 = from p in players
-                            orderby p.Win
+                            orderby p.Win descending
                             select p;
         int i = 1;
         foreach (var p in sortedPeople1)
