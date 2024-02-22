@@ -1,462 +1,434 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
 using System.Numerics;
+using System.Reflection.Emit;
+using static System.Formats.Asn1.AsnWriter;
 
-public class Player
+Console.WriteLine("Меню:");
+Console.WriteLine("1 - зарегистрировать игрока.");
+Console.WriteLine("2 - пополнить счет игрока.");
+Console.WriteLine("3 - играть 21 ОЧКО");
+Console.WriteLine("4 - играть РУЛЕТКА");
+Console.WriteLine("5 - посмотреть рейтинг пользователей.");
+Console.WriteLine("6 - ВЫХОД");
+int ch;
+Casino casino = new Casino();
+while (true)
 {
-    public string Username { get; private set; }
-    public decimal Balance { get; private set; }
-    public List<string> GameHistory { get; private set; }
-    public List<string> TransactionHistory { get; private set; }
+    Console.WriteLine("Сделайте выбор в меню:");
+    ch = Convert.ToInt32(Console.ReadLine());
+    if (ch == 6)
+        break;
+    switch (ch)
+    {
+        case 1:
+            casino.AddAccount();
+            break;
+        case 2:
+            Console.WriteLine("сумма пополнения:");
+            int money = Convert.ToInt32(Console.ReadLine());
+            casino.PlayerDeposit(money);
+            break;
+        case 3:
+            casino.PlayGame21();
+            break;
+        case 4:
+            casino.RoulleteGame();
+            break;
+        case 5:
+            casino.PlayerRating();
+            break;
+        default:
+            Console.WriteLine("в меню нет такой опции!");
+            break;
 
-    public Player(string username)
-    {
-        Username = username;
-        Balance = 0;
-        GameHistory = new List<string>();
-        TransactionHistory = new List<string>();
-    }
 
-    // баланс
-    public void UpdateBalance(decimal amount)
-    {
-        Balance += amount;
-    }
-    public void Deposit(decimal amount)
-    {
-        UpdateBalance(amount);
-        AddToTransactionHistory($"Пополнение на {amount} виртуальных денег.");
-    }
-
-
-    public void AddToGameHistory(string gameResult)
-    {
-        GameHistory.Add(gameResult);
-    }
-
-    public void AddToTransactionHistory(string transactionDetails)
-    {
-        TransactionHistory.Add(transactionDetails);
-    }
-
-    public void DisplayGameHistory()
-    {
-        Console.WriteLine($"История игр для игрока {Username}:");
-        if (GameHistory.Any())
-        {
-            foreach (var gameResult in GameHistory)
-            {
-                Console.WriteLine(gameResult);
-            }
-        }
-        else
-        {
-            Console.WriteLine("История игр пуста.");
-        }
-    }
-
-    public void Withdraw(decimal amount)
-    {
-        if (Balance >= amount)
-        {
-            UpdateBalance(-amount);
-            AddToTransactionHistory($"Вывод {amount} виртуальных денег.");
-        }
-        else
-        {
-            Console.WriteLine($"Недостаточно средств на балансе.");
-        }
-    }
-    public void DisplayBalance()
-    {
-        Console.WriteLine($"Текущий баланс игрока {Username}: {Balance}");
     }
 }
 
-public class AccountManager
+
+
+
+
+class PlayerAccount
 {
-    private List<Player> players;
+    public string Login { get; set; }
+    public string Password { get; set; }
+    public int Balance { get; set; }
+    public int Win { get; set; }
+    public int Loss { get; set; }
+    public int Visit { get; set; }
 
-    public AccountManager()
+
+    public void Registration()
     {
-        players = new List<Player>();
-    }
-
-    public void RegisterPlayer()
-    {
-        Console.Write("Введите ваше имя: ");
-        string username = Console.ReadLine();
-
-        if (IsUsernameUnique(username))
-        {
-            Player player = new Player(username);
-            players.Add(player);
-            Console.WriteLine($"Игрок {username} успешно зарегистрирован.");
-            
-        }
-        else
-        {
-            Console.WriteLine("Имя пользователя уже занято. Пожалуйста, выберите другое имя.");
-        }
-    }
-
-    public void DepositMoney()
-    {
-        Console.Write("Введите ваше имя: ");
-        string username = Console.ReadLine();
-
-        Player player = FindPlayerByUsername(username);
-
-        if (player != null)
-        {
-            decimal amount = GetValidAmount("Введите сумму для пополнения баланса: ");
-            player.UpdateBalance(amount);
-            player.AddToTransactionHistory($"Пополнение на {amount} виртуальных денег.");
-            player.DisplayBalance();
-        }
-        else
-        {
-            Console.WriteLine("Игрок не найден.");
-        }
-    }
-
-    public void WithdrawMoney()
-    {
-        Console.Write("Введите ваше имя: ");
-        string username = Console.ReadLine();
-
-        Player player = FindPlayerByUsername(username);
-
-        if (player != null)
-        {
-            decimal amount = GetValidAmount("Введите сумму для вывода средств: ");
-            if (player.Balance >= amount)
-            {
-                player.UpdateBalance(-amount); // Снятие 
-                player.AddToTransactionHistory($"Вывод {amount} виртуальных денег.");
-                player.DisplayBalance();
-            }
-            else
-            {
-                Console.WriteLine($"Недостаточно средств на балансе игрока {username}.");
-            }
-        }
-        else
-        {
-            Console.WriteLine("Игрок не найден.");
-        }
-    }
-
-    private decimal GetValidAmount(string prompt)
-    {
-        decimal amount;
+        Console.WriteLine("Введите логин:");
+        Login = Console.ReadLine();
         while (true)
         {
-            Console.Write(prompt);
-            if (decimal.TryParse(Console.ReadLine(), out amount) && amount > 0)
+            Console.WriteLine("Введите пароль");
+            Password = Console.ReadLine();
+            Console.WriteLine("Повторите пароль");
+            string password2 = Console.ReadLine();
+            if (password2 != Password)
             {
-                return amount;
+                Console.WriteLine("Пароли не совпадают.");
+                continue;
             }
-            else
-            {
-                Console.WriteLine("Некорректная сумма. Пожалуйста, введите положительное число.");
-            }
+
+            break;
         }
-    }
-
-    private Player FindPlayerByUsername(string username)
-    {
-        return players.FirstOrDefault(player => player.Username == username);
-    }
-
-    private bool IsUsernameUnique(string username)
-    {
-        return players.All(player => player.Username != username);
-    }
-
-
-    public void PlayGame()
-    {
-        Console.Write("Введите ваше имя: ");
-        string username = Console.ReadLine();
-
-        Player player = FindPlayerByUsername(username);
-
-        if (player != null)
-        {
-            Console.WriteLine("Выберите игру:");
-            Console.WriteLine("1. Блэкджек");
-            Console.WriteLine("2. Рулетка");
-            Console.WriteLine("3. Покер");
-            Console.WriteLine("4. Слот-машина");
-            Console.Write("Введите номер игры: ");
-            string choice = Console.ReadLine();
-
-            switch (choice)
-            {
-                case "1":
-                    new Blackjack().Play(player);
-                    break;
-                case "2":
-                    new RouletteGame().Play(player);
-                    break;
-                case "3":
-                    new Poker().Play(player);
-                    break;
-                case "4":
-                    new SlotMachine().Play(player);
-                    break;
-                default:
-                    Console.WriteLine("Неверный выбор. Пожалуйста, введите корректный номер.");
-                    break;
-                
-            }
-        }
-        else
-        {
-            Console.WriteLine("Игрок не найден.");
-        }
+        Console.WriteLine("Вы получаете 100 баллов на счет за регистрацию.");
+        Balance = 100;
+        Win = 0;
+        Loss = 0;
+        Visit = 1;
     }
 }
 
-public abstract class CasinoGame
+
+
+
+
+
+abstract class Game
 {
-    public abstract void Play(Player player);
+    //public virtual void AddPlayer() { }
+    public virtual void GameOn() { }
 }
 
-public class Blackjack : CasinoGame
+
+
+
+
+
+
+class Game21 : Game
 {
-    public override void Play(Player player)
+    public List<PlayerAccount> players = new List<PlayerAccount>();
+    List<ArrayList> deckCards = new List<ArrayList>() { new ArrayList() { "6 Пики", 6 }, new ArrayList() { "7 Пики", 7 }, new ArrayList() { "8 Пики", 8 }, new ArrayList() { "9 Пики", 9 },
+        new ArrayList() { "10 Пики", 10 }, new ArrayList() { "Валет Пики", 2 }, new ArrayList() { "Дама Пики", 3 }, new ArrayList() { "Король Пики", 4 }, new ArrayList() { "Туз Пики", 1 },
+        new ArrayList() { "6 Трефы", 6 }, new ArrayList() { "7 Трефы", 7 }, new ArrayList() { "8 Трефы", 8 }, new ArrayList() { "9 Трефы", 9 },
+        new ArrayList() { "10 Трефы", 10 }, new ArrayList() { "Валет Трефы", 2 }, new ArrayList() { "Дама Трефы", 3 }, new ArrayList() { "Король Трефы", 4 }, new ArrayList() { "Туз Трефы", 1 },
+        new ArrayList() { "6 Бубны", 6 }, new ArrayList() { "7 Бубны", 7 }, new ArrayList() { "8 Бубны", 8 }, new ArrayList() { "9 Бубны", 9 },
+        new ArrayList() { "10 Бубны  ", 10 }, new ArrayList() { "Валет Бубны", 2 }, new ArrayList() { "Дама Бубны", 3 }, new ArrayList() { "Король Бубны", 4 }, new ArrayList() { "Туз Бубны", 1 },
+        new ArrayList() { "6 Червы", 6 }, new ArrayList() { "7 Червы", 7 }, new ArrayList() { "8 Червы", 8 }, new ArrayList() { "9 Червы", 9 },
+        new ArrayList() { "10 Червы", 10 }, new ArrayList() { "Валет Червы", 2 }, new ArrayList() { "Дама Червы", 3 }, new ArrayList() { "Король Червы", 4 }, new ArrayList() { "Туз Червы", 1 } };
+
+    int CardSelection(ref ArrayList usedCards)
     {
-        
-    }
-}
-
-public class RouletteGame : CasinoGame
-{
-    private readonly string[] wheelNumbers =
-        {"0", "32", "15", "19", "4", "21", "2", "25", "17", "34", "6", "27", "13", "36", "11", "30", "8", "23", "10", "5", "24", "16", "33", "1", "20", "14", "31", "9", "22", "18", "29", "7", "28", "12", "35", "3", "26"};
-    private readonly Random random = new Random();
-
-    public override void Play(Player player)
-    {
-        Console.WriteLine($"Добро пожаловать в игру в рулетку, {player.Username}!");
-
-        decimal betAmount = GetValidBetAmount(player);
-
-        string betType = GetValidBetType();
-
-        string winningNumber = SpinWheel();
-
-        Console.WriteLine($"Выпавшее число: {winningNumber}");
-
-        if (CheckWin(betType, winningNumber))
-        {
-            decimal winnings = CalculateWinnings(betAmount, betType);
-            player.UpdateBalance(winnings);
-            Console.WriteLine($"Поздравляем! Вы выиграли {winnings} виртуальных денег.");
-        }
-        else
-        {
-            Console.WriteLine("К сожалению, вы проиграли. Попробуйте еще раз!");
-        }
-    }
-
-    private decimal GetValidBetAmount(Player player)
-    {
+        Random rand = new Random();
         while (true)
         {
-            Console.Write("Введите сумму ставки: ");
-            if (decimal.TryParse(Console.ReadLine(), out decimal betAmount) && betAmount > 0 && betAmount <= player.Balance)
+            int num = rand.Next(usedCards.Count);
+            for (int i = 0; i < usedCards.Count; i++)
             {
-                return betAmount;
+                int uC = (int)usedCards[i];
+                if (num == uC)
+                    continue;
+            }
+            usedCards.Add(num);
+            return num;
+        }
+    }
+
+    int Bet(PlayerAccount player, int bank)
+    {
+        Console.WriteLine($"Банк - {bank}, ставка не должне превышать банк.");
+        Console.WriteLine($"{player.Login} сделайте свою ставку:");
+        while (true)
+        {
+            int bet = Convert.ToInt32(Console.ReadLine());
+            if (bet <= bank && bet <= player.Balance)
+                return bet;
+            Console.WriteLine("Сделайте ставку не больше банка!");
+        }
+
+    }
+    public override void GameOn()
+    {
+        Random rand = new Random();
+
+        int banker = rand.Next(players.Count);
+        int startBank = players[banker].Balance;
+        int bank;
+        Console.WriteLine($"игрок {players[banker].Login} банкир.");
+
+        ArrayList usedCards = new ArrayList(); // для записи использованных карт (индекс)
+
+        int tmpToNewCard, tmpToBanker = 0;
+        int bet; // ставка
+        int chExc = 1; //маркер окончания игры
+        int bankerCard, playerCard; //выданная карта банкиру, игроку
+        int cardScoreBanker, cardScorePlayer; //счет банкира, игрока
+
+        while (chExc != 0)
+        {
+            for (int i = 0; i < players.Count; i++)
+            {
+
+                if (i == banker)
+                    continue;
+                bank = players[banker].Balance;
+
+                Console.WriteLine($"Играет игрок {players[i].Login} и банкир {players[banker].Login}");
+
+                bet = Bet(players[i], bank);
+                cardScorePlayer = 0;
+                while (true)
+                {
+                    playerCard = CardSelection(ref usedCards);
+                    cardScorePlayer += (int)deckCards[playerCard][1];
+                    Console.WriteLine($"игрок {players[i].Login} - выпала карта {(string)deckCards[playerCard][0]}, общий счет {cardScorePlayer}");
+                    if (cardScorePlayer == 21)
+                    {
+                        Console.WriteLine($"игрок {players[i].Login} выиграл!");
+                        players[i].Balance += bet;
+                        players[i].Win++;
+                        players[banker].Balance -= bet;
+                        players[banker].Loss++;
+                        goto Label;
+                    }
+                    if (cardScorePlayer > 21)
+                    {
+                        Console.WriteLine($"игрок {players[i].Login} проиграл!");
+                        players[i].Balance -= bet;
+                        players[i].Loss++;
+                        players[banker].Balance += bet;
+                        players[banker].Win++;
+                        if (players[i].Balance == 0)
+                        {
+                            Console.WriteLine($"игрок {players[i].Login} выбыл из игры! Закончились деньги!");
+                            players.RemoveAt(i);
+                            i--;
+                        }
+                        goto Label;
+                    }
+                    Console.WriteLine($"{players[i].Login}, берете еще одну карту? Если да нажмите 1, нет - любую клавишу:");
+                    tmpToNewCard = Convert.ToInt32(Console.ReadLine());
+                    if (tmpToNewCard != 1)
+                        break;
+                }
+
+                cardScoreBanker = 0;
+                while (cardScoreBanker < 17)
+                {
+                    bankerCard = CardSelection(ref usedCards);
+                    cardScoreBanker += (int)deckCards[bankerCard][1];
+                    Console.WriteLine($"Банкиру выпала карта {(string)deckCards[bankerCard][0]}, счет - {cardScoreBanker}");
+                }
+
+                if (cardScoreBanker == 21 || cardScoreBanker > cardScorePlayer && cardScoreBanker < 21)
+                {
+                    Console.WriteLine("Банкир выиграл!");
+                    players[i].Balance -= bet;
+                    players[i].Loss++;
+                    players[banker].Balance += bet;
+                    players[banker].Win++;
+                }
+                else
+                {
+                    Console.WriteLine($"Игрок {players[i].Login} выиграл!");
+                    players[i].Balance += bet;
+                    players[i].Win++;
+                    players[banker].Balance -= bet;
+                    players[banker].Loss++;
+                }
+
+            Label:
+
+                if (bank == 0)
+                {
+                    Console.WriteLine("Игра окончена! Банк пуст!");
+                    chExc = 0;
+                }
+                if (bank > startBank * 3)
+                {
+                    Console.WriteLine("Игра окончена! Банк превысил тройной размер!");
+                    chExc = 0;
+                }
+                if (players.Count == 1)
+                {
+                    Console.WriteLine("Игра окончена! Все игроки выбыли!");
+                    chExc = 0;
+                }
+                Console.WriteLine("закончить игру - 0, продолжить любую кнопку.");
+                chExc = Convert.ToInt32(Console.ReadLine());
+                if (chExc != 0)
+                    continue;
+                break;
+            }
+        }
+    }
+
+}
+
+
+
+
+//___________________________________________________________________________________________________________________________________
+class RouletteGame : Game
+{
+    private List<PlayerAccount> players;
+    private bool betOnRed;
+
+
+    public RouletteGame(List<PlayerAccount> players)
+    {
+        this.players = players;
+    }
+
+    public override void GameOn()
+    {
+        Console.WriteLine("**Игра в рулетку**");
+
+        foreach (PlayerAccount player in players)
+        {
+            Console.WriteLine($"{player.Login}, сделайте ставку на красное (1) или черное (2):");
+            int colorChoice = Convert.ToInt32(Console.ReadLine());
+
+            bool betOnRed = (colorChoice == 1);
+
+            Console.WriteLine($"{player.Login}, сделайте ставку:");
+            int bet = Convert.ToInt32(Console.ReadLine());
+            if (bet > player.Balance)
+            {
+                Console.WriteLine("Недостаточно средств!");
+                continue;
+            }
+
+            Random rand = new Random();
+            int number = rand.Next(37);
+            string color = GetColor(number);
+
+            Console.WriteLine($"Выпало число {number} ({color})");
+
+            if (IsWin(number, color, bet, betOnRed))
+            {
+                Console.WriteLine($"{player.Login}, вы выиграли!");
+                player.Balance += bet;
             }
             else
             {
-                Console.WriteLine("Некорректная сумма ставки. Пожалуйста, введите положительное число, не превышающее ваш баланс.");
+                Console.WriteLine($"{player.Login}, вы проиграли!");
+                player.Balance -= bet;
             }
         }
     }
 
-    private string GetValidBetType()
+    private bool IsWin(int number, string color, int bet, bool betOnRed)
     {
-        Console.Write("Выберите тип ставки (например, 'четное', 'нечетное', 'красное', 'черное', 'число'): ");
-        string betType = Console.ReadLine().ToLower();
 
-
-        return betType;
-    }
-
-    private string SpinWheel()
-    {
-        int randomIndex = random.Next(0, wheelNumbers.Length);
-        return wheelNumbers[randomIndex];
-    }
-
-    private bool CheckWin(string betType, string winningNumber)
-    {
-        // Пример: для числовой ставки
-        if (int.TryParse(betType, out int chosenNumber))
+        if (color == "Зеленое" && betOnRed)
         {
-            return winningNumber == betType;
+            return false;
+        }
+        else if (color == "Зеленое" && !betOnRed)
+        {
+            return false;
         }
 
-        // Пример: для ставки на четное или нечетное
-        if (betType.ToLower() == "четное" || betType.ToLower() == "нечетное")
+        else if ((color == "Красное" && betOnRed) || (color == "Черное" && !betOnRed))
         {
-            int parsedWinningNumber;
-            if (int.TryParse(winningNumber, out parsedWinningNumber))
+
+            if (color == "Красное" || color == "Черное")
             {
-                return (parsedWinningNumber % 2 == 0 && betType.ToLower() == "четное") ||
-                       (parsedWinningNumber % 2 != 0 && betType.ToLower() == "нечетное");
+                return (number % 2 == 0 && color == "Черное" && !betOnRed) ||
+                       (number % 2 != 0 && color == "Красное" && betOnRed);
             }
-        }
 
-       
-        if (betType.ToLower() == "красное" || betType.ToLower() == "черное")
-        {
-            // Здесь нужна информация о цвете выпавшего числа (красное или черное)
-            // Предположим, что у нас есть метод GetColorForNumber, который возвращает "красное" или "черное"
-            string color = GetColorForNumber(winningNumber);
-            return color.ToLower() == betType.ToLower();
+            else
+            {
+                return (number == 0);
+            }
         }
 
         return false;
     }
 
-    private decimal CalculateWinnings(decimal betAmount, string betType)
+    private string GetColor(int number)
     {
-        // Пример: для числовой ставки
-        if (int.TryParse(betType, out int chosenNumber))
+        if (number == 0)
+            return "Зеленое";
+        return (number % 2 == 0) ? "Черное" : "Красное";
+    }
+}
+
+//___________________________________________________________________________________________________________________________________
+
+
+
+public class Casino
+{
+    List<PlayerAccount> players = new List<PlayerAccount>();
+
+    public void AddAccount()
+    {
+        PlayerAccount player = new PlayerAccount();
+        player.Registration();
+        players.Add(player);
+    }
+
+
+    void PlayersForGame(List<PlayerAccount> playersForGame)
+    {
+        Console.WriteLine("Выбор игроков для игры.");
+        Console.WriteLine("0-играет, не играет - любая");
+        int tmp;
+        for (int i = 0; i < players.Count; i++)
         {
-            return betAmount * 36; // Выигрыш при угадывании числа
+            Console.WriteLine(players[i].Login);
+            tmp = Convert.ToInt32(Console.ReadLine());
+            if (tmp == 0)
+                playersForGame.Add(players[i]);
         }
+    }
 
-        // Пример: для других типов ставок (четное/нечетное, красное/черное)
-        // Установим коэффициент выигрыша в зависимости от типа ставки
-        decimal winMultiplier = 2; // Пусть для примера коэффициент будет 2 для большинства ставок
+    public void PlayGame21()
+    {
+        Game21 game21 = new Game21();
+        if (players.Count > 1)
+            PlayersForGame(game21.players);
+        else
+            Console.WriteLine("нет достаточного колличества зарегистрированных игроков.");
 
-        // Уточним коэффициент для числовых ставок
-        if (betType.ToLower() == "четное" || betType.ToLower() == "нечетное" || betType.ToLower() == "красное" || betType.ToLower() == "черное")
+        if (game21.players.Count > 1)
+            game21.GameOn();
+        else
+            Console.WriteLine("в игру могут играть не меньше двух игроков.");
+    }
+
+    public void PlayerRating()
+    {
+        var sortedPeople1 = from p in players
+                            orderby p.Win descending
+                            select p;
+        int i = 1;
+        foreach (var p in sortedPeople1)
         {
-            winMultiplier = 1; // Для чет/нечет, красное/черное коэффициент будет 1
+            Console.WriteLine($"{i}. {p.Login}, побед - {p.Win}");
+            i++;
         }
-
-        return betAmount * winMultiplier;
     }
 
-    private string GetColorForNumber(string number)
+    public void PlayerDeposit(int money)
     {
-        if (int.TryParse(number, out int parsedNumber))
+        Console.WriteLine("Логин:");
+        string log = Console.ReadLine();
+        Console.WriteLine("Пароль:");
+        string pass = Console.ReadLine();
+        for (int i = 0; i < players.Count; i++)
         {
-            if (parsedNumber == 0) 
-            {
-                return "зеленое";
-            }
-            else if ((parsedNumber >= 1 && parsedNumber <= 10) || (parsedNumber >= 19 && parsedNumber <= 28))
-            {
-                return parsedNumber % 2 == 0 ? "красное" : "черное";
-            }
-            else if ((parsedNumber >= 11 && parsedNumber <= 18) || (parsedNumber >= 29 && parsedNumber <= 36))
-            {
-                return parsedNumber % 2 == 0 ? "черное" : "красное";
-            }
+            if (players[i].Login == log && players[i].Password == pass)
+                players[i].Balance += money;
         }
-
-        return string.Empty; 
-    }
-}
-
-public class Poker : CasinoGame
-{
-    public override void Play(Player player)
-    {
-        
-    }
-}
-
-public class SlotMachine : CasinoGame
-{
-    public override void Play(Player player)
-    {
-        
-    }
-}
-
-public class BettingSystem
-{
-    public void PlaceBet(Player player, decimal amount)
-    {
-        //Ставки
     }
 
-    public void CalculateWinnings(Player player, decimal multiplier)
+    public void RoulleteGame()
     {
-        // Расчет выигрышей и обновление баланса
-    }
-}
-
-
-
-public class BonusSystem
-{
-    public void GrantRegistrationBonus(Player player)
-    {
-       
-    }
-}
-
-
-
-public class RankSystem
-{
-    public void UpdatePlayerRank(Player player)
-    {
-        // Обновление ранга игрока в зависимости от его активности и успехов
-    }
-}
-
-
-
-public class Program
-{
-    static void Main()
-    {
-
-        AccountManager accountManager = new AccountManager();
-        accountManager.RegisterPlayer();
-
-        while (true)
-        {
-
-            Console.WriteLine("\n1. Внести пополнение");
-            Console.WriteLine("2. Вывести средства");
-            Console.WriteLine("3. Играть");
-            Console.WriteLine("4. Выйти");
-
-            Console.Write("Выберите действие (введите номер): ");
-            string choice = Console.ReadLine();
-
-            switch (choice)
-            {
-                case "1":
-                    accountManager.DepositMoney();
-                    break;
-                case "2":
-                    accountManager.WithdrawMoney();
-                    break;
-                case "3":
-                    accountManager.PlayGame();
-                    break;
-                case "4":
-                    Environment.Exit(0);
-                    break;
-
-                default:
-                    Console.WriteLine("Неверный выбор. Пожалуйста, введите корректный номер.");
-                    break;
-            }
-        }
+        RouletteGame rouletteGame = new RouletteGame(players);
+        rouletteGame.GameOn();
     }
 }
