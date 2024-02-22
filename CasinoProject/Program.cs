@@ -283,12 +283,14 @@ class RouletteGame : Game
     public override void GameOn()
     {
         Console.WriteLine("**Игра в рулетку**");
+        Console.WriteLine("Цвета: Зеленое (0), Красное (1), Черное (2)");
 
         foreach (PlayerAccount player in players)
         {
-            Console.WriteLine($"{player.Login}, сделайте ставку на красное (1) или черное (2):");
+            Console.WriteLine($"{player.Login}, сделайте ставку на цвет:");
             int colorChoice = Convert.ToInt32(Console.ReadLine());
 
+            bool betOnGreen = (colorChoice == 0);
             bool betOnRed = (colorChoice == 1);
 
             Console.WriteLine($"{player.Login}, сделайте ставку:");
@@ -305,7 +307,7 @@ class RouletteGame : Game
 
             Console.WriteLine($"Выпало число {number} ({color})");
 
-            if (IsWin(number, color, bet, betOnRed))
+            if (IsWin(number, color, bet, betOnGreen, betOnRed))
             {
                 Console.WriteLine($"{player.Login}, вы выиграли!");
                 player.Balance += bet;
@@ -318,31 +320,22 @@ class RouletteGame : Game
         }
     }
 
-    private bool IsWin(int number, string color, int bet, bool betOnRed)
+    private bool IsWin(int number, string color, int bet, bool betOnGreen, bool betOnRed)
     {
-
-        if (color == "Зеленое" && betOnRed)
-        {
-            return false;
-        }
-        else if (color == "Зеленое" && !betOnRed)
+        if (color == "Зеленое" && !betOnGreen)
         {
             return false;
         }
 
-        else if ((color == "Красное" && betOnRed) || (color == "Черное" && !betOnRed))
+        if (color == "Зеленое" && betOnGreen)
         {
+            return (number == 0);
+        }
 
-            if (color == "Красное" || color == "Черное")
-            {
-                return (number % 2 == 0 && color == "Черное" && !betOnRed) ||
-                       (number % 2 != 0 && color == "Красное" && betOnRed);
-            }
-
-            else
-            {
-                return (number == 0);
-            }
+        if ((color == "Красное" && betOnRed) || (color == "Черное" && !betOnRed))
+        {
+            return (number % 2 == 0 && color == "Черное" && !betOnRed) ||
+                   (number % 2 != 0 && color == "Красное" && betOnRed);
         }
 
         return false;
