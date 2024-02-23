@@ -427,13 +427,13 @@ public class Casino
         RouletteGame rouletteGame = new RouletteGame(players);
         rouletteGame.GameOn();
 
-        // After the RouletteGame is played, update the Win count for the players who won.
+        
         foreach (PlayerAccount player in players)
         {
-            if (player.WonLastGame) // Assuming you have a property like WonLastGame in PlayerAccount
+            if (player.WonLastGame) 
             {
                 player.Win++;
-                player.WonLastGame = false; // Reset the flag for the next round/game
+                player.WonLastGame = false; 
             }
         }
     }
