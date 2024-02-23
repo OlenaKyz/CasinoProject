@@ -60,6 +60,7 @@ class PlayerAccount
     public int Win { get; set; }
     public int Loss { get; set; }
     public int Visit { get; set; }
+    public bool WonLastGame { get; set; }
 
 
     public void Registration()
@@ -311,11 +312,13 @@ class RouletteGame : Game
             {
                 Console.WriteLine($"{player.Login}, вы выиграли!");
                 player.Balance += bet;
+                player.WonLastGame = true; 
             }
             else
             {
                 Console.WriteLine($"{player.Login}, вы проиграли!");
                 player.Balance -= bet;
+                player.WonLastGame = false;
             }
         }
     }
@@ -423,5 +426,15 @@ public class Casino
     {
         RouletteGame rouletteGame = new RouletteGame(players);
         rouletteGame.GameOn();
+
+        // After the RouletteGame is played, update the Win count for the players who won.
+        foreach (PlayerAccount player in players)
+        {
+            if (player.WonLastGame) // Assuming you have a property like WonLastGame in PlayerAccount
+            {
+                player.Win++;
+                player.WonLastGame = false; // Reset the flag for the next round/game
+            }
+        }
     }
 }
